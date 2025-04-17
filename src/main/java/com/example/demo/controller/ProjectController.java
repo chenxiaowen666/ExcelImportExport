@@ -4,6 +4,7 @@ import com.example.demo.service.ProjectService;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import jakarta.servlet.http.HttpServletResponse;
+import com.example.demo.util.ExcelUtil;
 
 @RestController
 @RequestMapping("/api/projects")
@@ -29,5 +30,10 @@ public class ProjectController {
             HttpServletResponse response
     ) throws Exception {
         projectService.exportExcel(year, projectType, projectName, response);
+    }
+
+    @GetMapping("/template")
+    public void downloadTemplate(HttpServletResponse response) throws Exception {
+        ExcelUtil.createTemplate(response);
     }
 }

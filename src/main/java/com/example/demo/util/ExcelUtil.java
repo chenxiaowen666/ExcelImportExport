@@ -22,6 +22,25 @@ public class ExcelUtil {
             "11月完成率", "12月完成率", "创建人", "创建时间", "修改人", "修改时间"
     };
 
+    public static void createTemplate(HttpServletResponse response) throws Exception {
+        Workbook workbook = new XSSFWorkbook();
+        Sheet sheet = workbook.createSheet("Projects");
+        Row headerRow = sheet.createRow(0);
+        for (int i = 0; i < HEADERS.length; i++) {
+            Cell cell = headerRow.createCell(i);
+            cell.setCellValue(HEADERS[i]);
+        }
+        for (int i = 0; i < HEADERS.length; i++) {
+            sheet.autoSizeColumn(i);
+        }
+        response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+        response.setHeader("Content-Disposition", "attachment; filename=project_template.xlsx");
+        OutputStream outputStream = response.getOutputStream();
+        workbook.write(outputStream);
+        workbook.close();
+        outputStream.flush();
+    }
+
     public static List<ProjectDTO> readExcel(InputStream inputStream) throws Exception {
         List<ProjectDTO> list = new ArrayList<>();
         Workbook workbook = new XSSFWorkbook(inputStream);
