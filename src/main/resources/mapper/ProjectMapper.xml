@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.demo.mapper.ProjectMapper">
+
+    <resultMap id="ProjectMap" type="com.example.demo.entity.Project">
+        <id property="id" column="id"/>
+        <result property="projectName" column="project_name"/>
+        <result property="projectType" column="project_type"/>
+        <result property="projectBudget" column="project_budget"/>
+        <result property="targetAmount" column="target_amount"/>
+        <result property="totalCompletionRate" column="total_completion_rate"/>
+        <result property="januaryRate" column="january_rate"/>
+        <result property="februaryRate" column="february_rate"/>
+        <result property="marchRate" column="march_rate"/>
+        <result property="aprilRate" column="april_rate"/>
+        <result property="mayRate" column="may_rate"/>
+        <result property="juneRate" column="june_rate"/>
+        <result property="julyRate" column="july_rate"/>
+        <result property="augustRate" column="august_rate"/>
+        <result property="septemberRate" column="september_rate"/>
+        <result property="octoberRate" column="october_rate"/>
+        <result property="novemberRate" column="november_rate"/>
+        <result property="decemberRate" column="december_rate"/>
+        <result property="creator" column="creator"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updater" column="updater"/>
+        <result property="updateTime" column="update_time"/>
+    </resultMap>
+
+    <select id="findByProjectName" resultMap="ProjectMap">
+        SELECT * FROM project WHERE project_name = #{projectName}
+    </select>
+
+    <insert id="insert" parameterType="com.example.demo.entity.Project">
+        INSERT INTO project (
+            project_name, project_type, project_budget, target_amount,
+            total_completion_rate, january_rate, february_rate, march_rate,
+            april_rate, may_rate, june_rate, july_rate, august_rate,
+            september_rate, october_rate, november_rate, december_rate,
+            creator, create_time
+        ) VALUES (
+                     #{projectName}, #{projectType}, #{projectBudget}, #{targetAmount},
+                     #{totalCompletionRate},
+                     #{januaryRate}, #{februaryRate}, #{marchRate},
+                     #{aprilRate}, #{mayRate}, #{juneRate},
+                     #{julyRate}, #{augustRate}, #{septemberRate},
+                     #{octoberRate}, #{novemberRate}, #{decemberRate},
+                     #{creator}, #{createTime}
+                 )
+    </insert>
+    <update id="update" parameterType="com.example.demo.entity.Project">
+        UPDATE project SET
+                           project_type = #{projectType},
+                           project_budget = #{projectBudget},
+                           target_amount = #{targetAmount},
+                           total_completion_rate = #{totalCompletionRate},
+                           january_rate = #{januaryRate},
+                           february_rate = #{februaryRate},
+                           march_rate = #{marchRate},
+                           april_rate = #{aprilRate},
+                           may_rate = #{mayRate},
+                           june_rate = #{juneRate},
+                           july_rate = #{julyRate},
+                           august_rate = #{augustRate},
+                           september_rate = #{septemberRate},
+                           october_rate = #{octoberRate},
+                           november_rate = #{novemberRate},
+                           december_rate = #{decemberRate},
+                           updater = #{updater},
+                           update_time = #{updateTime}
+        WHERE project_name = #{projectName}
+    </update>
+
+    <select id="findByConditions" resultMap="ProjectMap">
+        SELECT * FROM project
+        WHERE 1=1
+        <if test="year != null">
+            AND YEAR(create_time) = #{year}
+        </if>
+        <if test="projectType != null and projectType != ''">
+            AND project_type = #{projectType}
+        </if>
+        <if test="projectName != null and projectName != ''">
+            AND project_name LIKE CONCAT('%', #{projectName}, '%')
+        </if>
+    </select>
+</mapper>
