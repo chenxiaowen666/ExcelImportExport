@@ -24,12 +24,12 @@ public class ProjectController {
 
     @GetMapping("/export")
     public void exportExcel(
-            @RequestParam(required = false) Integer year,
+            @RequestParam(required = false) Integer annual,
             @RequestParam(required = false) String projectType,
             @RequestParam(required = false) String projectName,
             HttpServletResponse response
     ) throws Exception {
-        projectService.exportExcel(year, projectType, projectName, response);
+        projectService.exportExcel(annual, projectType, projectName, response);
     }
 
     @GetMapping("/template")

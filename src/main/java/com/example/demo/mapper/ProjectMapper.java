@@ -11,7 +11,7 @@ public interface ProjectMapper {
     void insert(Project project);
     void update(Project project);
     List<Project> findByConditions(
-            @Param("year") Integer year,
+            @Param("annual") Integer annual,
             @Param("projectType") String projectType,
             @Param("projectName") String projectName
     );

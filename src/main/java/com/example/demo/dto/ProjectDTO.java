@@ -7,6 +7,7 @@ import java.time.LocalDateTime;
 @Data
 public class ProjectDTO {
     private String projectName;
+    private Integer annual;
     private String projectType;
     private BigDecimal projectBudget;
     private BigDecimal targetAmount;

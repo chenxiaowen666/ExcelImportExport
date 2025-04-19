@@ -6,6 +6,7 @@
     <resultMap id="ProjectMap" type="com.example.demo.entity.Project">
         <id property="id" column="id"/>
         <result property="projectName" column="project_name"/>
+        <result property="annual" column="annual"/>
         <result property="projectType" column="project_type"/>
         <result property="projectBudget" column="project_budget"/>
         <result property="targetAmount" column="target_amount"/>
@@ -27,20 +28,28 @@
         <result property="updater" column="updater"/>
         <result property="updateTime" column="update_time"/>
     </resultMap>
-
+    <sql id="Base_Column_List">
+        id, project_name, annual, project_type, project_budget,
+        target_amount, total_completion_rate,
+        january_rate, february_rate, march_rate,
+        april_rate, may_rate, june_rate,
+        july_rate, august_rate, september_rate,
+        october_rate, november_rate, december_rate,
+        creator, create_time, updater, update_time
+    </sql>
     <select id="findByProjectName" resultMap="ProjectMap">
         SELECT * FROM project WHERE project_name = #{projectName}
     </select>
 
     <insert id="insert" parameterType="com.example.demo.entity.Project">
         INSERT INTO project (
-            project_name, project_type, project_budget, target_amount,
+            project_name, annual,project_type, project_budget, target_amount,
             total_completion_rate, january_rate, february_rate, march_rate,
             april_rate, may_rate, june_rate, july_rate, august_rate,
             september_rate, october_rate, november_rate, december_rate,
             creator, create_time
         ) VALUES (
-                     #{projectName}, #{projectType}, #{projectBudget}, #{targetAmount},
+                     #{projectName}, #{annual},#{projectType}, #{projectBudget}, #{targetAmount},
                      #{totalCompletionRate},
                      #{januaryRate}, #{februaryRate}, #{marchRate},
                      #{aprilRate}, #{mayRate}, #{juneRate},
@@ -51,6 +60,7 @@
     </insert>
     <update id="update" parameterType="com.example.demo.entity.Project">
         UPDATE project SET
+                           annual = #{annual},
                            project_type = #{projectType},
                            project_budget = #{projectBudget},
                            target_amount = #{targetAmount},
@@ -73,10 +83,11 @@
     </update>
 
     <select id="findByConditions" resultMap="ProjectMap">
-        SELECT * FROM project
+        SELECT <include refid="Base_Column_List"></include>
+        FROM project
         WHERE 1=1
-        <if test="year != null">
-            AND YEAR(create_time) = #{year}
+        <if test="annual != null">
+            AND annual = #{annual}
         </if>
         <if test="projectType != null and projectType != ''">
             AND project_type = #{projectType}

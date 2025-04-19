@@ -5,5 +5,5 @@ import jakarta.servlet.http.HttpServletResponse;
 
 public interface ProjectService {
     void importExcel(MultipartFile file) throws Exception;
-    void exportExcel(Integer year, String projectType, String projectName, HttpServletResponse response) throws Exception;
+    void exportExcel(Integer annual, String projectType, String projectName, HttpServletResponse response) throws Exception;
 }

@@ -19,6 +19,11 @@ public class Project {
     @DecimalMin(value = "0.0", message = "项目预算不能为负数")
     private BigDecimal projectBudget;
 
+    @NotNull(message = "年度不能为空")
+    @Min(value = 2000, message = "年度不能早于2000年")
+    @Max(value = 2099, message = "年度不能晚于2099年")
+    private Integer annual;
+
     @NotNull(message = "预算目标金额不能为空")
     @DecimalMin(value = "0.0", message = "预算目标金额不能为负数")
     private BigDecimal targetAmount;

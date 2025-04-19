@@ -52,14 +52,15 @@ public class ProjectServiceImpl implements ProjectService {
     }
 
     @Override
-    public void exportExcel(Integer year, String projectType, String projectName, HttpServletResponse response) throws Exception {
-        List<Project> projects = projectMapper.findByConditions(year, projectType, projectName);
+    public void exportExcel(Integer annual, String projectType, String projectName, HttpServletResponse response) throws Exception {
+        List<Project> projects = projectMapper.findByConditions(annual, projectType, projectName);
         ExcelUtil.writeExcel(projects, response);
     }
 
     private Project convertToEntity(ProjectDTO dto) {
         Project project = new Project();
         project.setProjectName(dto.getProjectName());
+        project.setAnnual(dto.getAnnual());
         project.setProjectType(dto.getProjectType());
         project.setProjectBudget(dto.getProjectBudget());
         project.setTargetAmount(dto.getTargetAmount());
