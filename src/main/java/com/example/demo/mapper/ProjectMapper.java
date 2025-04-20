@@ -15,4 +15,8 @@ public interface ProjectMapper {
             @Param("projectType") String projectType,
             @Param("projectName") String projectName
     );
+
+    // 新增批量方法
+    void batchInsert(@Param("projects") List<Project> projects);
+    void batchUpdate(@Param("projects") List<Project> projects);
 }

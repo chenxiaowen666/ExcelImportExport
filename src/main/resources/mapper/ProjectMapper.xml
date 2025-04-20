@@ -96,4 +96,54 @@
             AND project_name LIKE CONCAT('%', #{projectName}, '%')
         </if>
     </select>
+
+    <!-- 批量插入 -->
+    <insert id="batchInsert" parameterType="java.util.List">
+        INSERT INTO project (
+        project_name, annual, project_type, project_budget, target_amount,
+        total_completion_rate, january_rate, february_rate, march_rate,
+        april_rate, may_rate, june_rate, july_rate, august_rate,
+        september_rate, october_rate, november_rate, december_rate,
+        creator, create_time
+        ) VALUES
+        <foreach collection="projects" item="project" separator=",">
+            (
+            #{project.projectName}, #{project.annual}, #{project.projectType},
+            #{project.projectBudget}, #{project.targetAmount},
+            #{project.totalCompletionRate}, #{project.januaryRate},
+            #{project.februaryRate}, #{project.marchRate}, #{project.aprilRate},
+            #{project.mayRate}, #{project.juneRate}, #{project.julyRate},
+            #{project.augustRate}, #{project.septemberRate}, #{project.octoberRate},
+            #{project.novemberRate}, #{project.decemberRate},
+            #{project.creator}, #{project.createTime}
+            )
+        </foreach>
+    </insert>
+
+    <!-- 批量更新 -->
+    <update id="batchUpdate" parameterType="java.util.List">
+        <foreach collection="projects" item="project" separator=";">
+            UPDATE project SET
+            annual = #{project.annual},
+            project_type = #{project.projectType},
+            project_budget = #{project.projectBudget},
+            target_amount = #{project.targetAmount},
+            total_completion_rate = #{project.totalCompletionRate},
+            january_rate = #{project.januaryRate},
+            february_rate = #{project.februaryRate},
+            march_rate = #{project.marchRate},
+            april_rate = #{project.aprilRate},
+            may_rate = #{project.mayRate},
+            june_rate = #{project.juneRate},
+            july_rate = #{project.julyRate},
+            august_rate = #{project.augustRate},
+            september_rate = #{project.septemberRate},
+            october_rate = #{project.octoberRate},
+            november_rate = #{project.novemberRate},
+            december_rate = #{project.decemberRate},
+            updater = #{project.updater},
+            update_time = #{project.updateTime}
+            WHERE project_name = #{project.projectName}
+        </foreach>
+    </update>
 </mapper>

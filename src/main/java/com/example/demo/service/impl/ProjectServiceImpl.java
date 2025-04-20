@@ -5,6 +5,8 @@ import com.example.demo.entity.Project;
 import com.example.demo.mapper.ProjectMapper;
 import com.example.demo.service.ProjectService;
 import com.example.demo.util.ExcelUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import jakarta.servlet.http.HttpServletResponse;
@@ -12,11 +14,15 @@ import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validator;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 public class ProjectServiceImpl implements ProjectService {
+    private static final Logger logger = LoggerFactory.getLogger(ProjectServiceImpl.class);
+
 
     private final ProjectMapper projectMapper;
     private final Validator validator;
@@ -27,28 +33,69 @@ public class ProjectServiceImpl implements ProjectService {
     }
 
     @Override
-    public void importExcel(MultipartFile file) throws Exception {
+    public ImportResult importExcel(MultipartFile file) throws Exception {
+        ImportResult result = new ImportResult();
+        List<String> errors = new ArrayList<>();
+        List<Project> insertList = new ArrayList<>();
+        List<Project> updateList = new ArrayList<>();
+
+        // 读取 Excel
         List<ProjectDTO> dtos = ExcelUtil.readExcel(file.getInputStream());
 
-        for (ProjectDTO dto : dtos) {
-            Project project = convertToEntity(dto);
+        for (int i = 0; i < dtos.size(); i++) {
+            ProjectDTO dto = dtos.get(i);
+            try {
+                Project project = convertToEntity(dto);
 
-            // 数据校验
-            Set<ConstraintViolation<Project>> violations = validator.validate(project);
-            if (!violations.isEmpty()) {
-                throw new IllegalArgumentException(violations.iterator().next().getMessage());
-            }
+                // 设置默认值
+                if (project.getCreateTime() == null) {
+                    project.setCreateTime(LocalDateTime.now());
+                }
+                if (project.getUpdateTime() == null) {
+                    project.setUpdateTime(LocalDateTime.now());
+                }
 
-            // 检查是否存在
-            Project existing = projectMapper.findByProjectName(project.getProjectName());
-            if (existing == null) {
-                project.setCreateTime(LocalDateTime.now());
-                projectMapper.insert(project);
-            } else {
-                project.setUpdateTime(LocalDateTime.now());
-                projectMapper.update(project);
+                // 数据校验
+                Set<ConstraintViolation<Project>> violations = validator.validate(project);
+                if (!violations.isEmpty()) {
+                    String errorMsg = violations.stream()
+                            .map(v -> v.getPropertyPath() + ": " + v.getMessage())
+                            .collect(Collectors.joining("; "));
+                    logger.error("处理第 {} 行数据失败: {}", i + 2, errorMsg);
+                    errors.add("第" + (i + 2) + "行: " + errorMsg);
+                    continue;
+                }
+
+                // 检查是否存在,判断插入或更新
+                Project existing = projectMapper.findByProjectName(project.getProjectName());
+                if (existing != null) {
+                    updateList.add(project);
+                } else {
+                    insertList.add(project);
+                }
+            } catch (Exception e) {
+                logger.error("处理第 {} 行数据失败: {}", i + 2, e.getMessage());
+                errors.add("第" + (i + 2) + "行: " + e.getMessage());
             }
         }
+
+        // 执行批量操作
+        try {
+            if (!insertList.isEmpty()) {
+                projectMapper.batchInsert(insertList);
+            }
+            if (!updateList.isEmpty()) {
+                projectMapper.batchUpdate(updateList);
+            }
+        } catch (Exception e) {
+            logger.error("批量操作失败: {}", e.getMessage());
+            errors.add("批量操作失败: " + e.getMessage());
+        }
+
+        // 设置结果
+        result.setSuccess(errors.isEmpty());
+        result.setErrors(errors);
+        return result;
     }
 
     @Override
