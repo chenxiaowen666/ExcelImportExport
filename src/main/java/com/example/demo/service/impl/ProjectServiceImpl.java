@@ -14,9 +14,7 @@ import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validator;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -37,23 +35,50 @@ public class ProjectServiceImpl implements ProjectService {
         ImportResult result = new ImportResult();
         List<String> errors = new ArrayList<>();
         List<Project> insertList = new ArrayList<>();
-        List<Project> updateList = new ArrayList<>();
+
 
         // 读取 Excel
         List<ProjectDTO> dtos = ExcelUtil.readExcel(file.getInputStream());
 
+        // 校验重复数据
+        Map<String, Integer> uniqueKeyToRow = new HashMap<>();
+        for (int i = 0; i < dtos.size(); i++) {
+            ProjectDTO dto = dtos.get(i);
+            // 创建唯一键
+            String projectName = dto.getProjectName() != null ? dto.getProjectName() : "";
+            String projectType = dto.getProjectType() != null ? dto.getProjectType() : "";
+            String annual = dto.getAnnual() != null ? dto.getAnnual().toString() : "";
+            String uniqueKey = projectName + "|" + annual + "|" + projectType;
+
+            // 检查重复
+            if (uniqueKeyToRow.containsKey(uniqueKey)) {
+                int firstRow = uniqueKeyToRow.get(uniqueKey);
+                String errorMsg = String.format("第%d行与第%d行数据重复，项目名: %s，年度: %s，项目类型: %s",
+                        firstRow, i + 2, projectName, annual, projectType);
+                errors.add(errorMsg);
+                logger.warn(errorMsg);
+            } else {
+                uniqueKeyToRow.put(uniqueKey, i + 2);
+            }
+        }
+        //有重复数据就没必要往下走了
+        if (!errors.isEmpty()) {
+            result.setSuccess(false);
+            result.setErrors(errors);
+            return result;
+        }
         for (int i = 0; i < dtos.size(); i++) {
             ProjectDTO dto = dtos.get(i);
             try {
                 Project project = convertToEntity(dto);
 
-                // 设置默认值
-                if (project.getCreateTime() == null) {
-                    project.setCreateTime(LocalDateTime.now());
-                }
-                if (project.getUpdateTime() == null) {
-                    project.setUpdateTime(LocalDateTime.now());
-                }
+//                // 设置默认值
+//                if (project.getCreateTime() == null) {
+//                    project.setCreateTime(LocalDateTime.now());
+//                }
+//                if (project.getUpdateTime() == null) {
+//                    project.setUpdateTime(LocalDateTime.now());
+//                }
 
                 // 数据校验
                 Set<ConstraintViolation<Project>> violations = validator.validate(project);
@@ -65,11 +90,17 @@ public class ProjectServiceImpl implements ProjectService {
                     errors.add("第" + (i + 2) + "行: " + errorMsg);
                     continue;
                 }
+                ProjectDTO projectDTO = new ProjectDTO();
+                projectDTO.setProjectName(project.getProjectName());
+                projectDTO.setAnnual(project.getAnnual());
+                projectDTO.setProjectType(project.getProjectType());
 
                 // 检查是否存在,判断插入或更新
-                Project existing = projectMapper.findByProjectName(project.getProjectName());
-                if (existing != null) {
-                    updateList.add(project);
+                List<Project> existingList = projectMapper.findByConditions(projectDTO);
+                if (!existingList.isEmpty()) {
+                    // 删除旧数据
+                    projectMapper.deleteByConditions(projectDTO);
+                    insertList.add(project);
                 } else {
                     insertList.add(project);
                 }
@@ -84,9 +115,6 @@ public class ProjectServiceImpl implements ProjectService {
             if (!insertList.isEmpty()) {
                 projectMapper.batchInsert(insertList);
             }
-            if (!updateList.isEmpty()) {
-                projectMapper.batchUpdate(updateList);
-            }
         } catch (Exception e) {
             logger.error("批量操作失败: {}", e.getMessage());
             errors.add("批量操作失败: " + e.getMessage());
@@ -100,7 +128,11 @@ public class ProjectServiceImpl implements ProjectService {
 
     @Override
     public void exportExcel(Integer annual, String projectType, String projectName, HttpServletResponse response) throws Exception {
-        List<Project> projects = projectMapper.findByConditions(annual, projectType, projectName);
+        ProjectDTO projectDTO = new ProjectDTO();
+        projectDTO.setAnnual(annual);
+        projectDTO.setProjectType(projectType);
+        projectDTO.setProjectName(projectName);
+        List<Project> projects = projectMapper.findByConditions(projectDTO);
         ExcelUtil.writeExcel(projects, response);
     }
 

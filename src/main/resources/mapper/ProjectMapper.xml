@@ -38,7 +38,9 @@
         creator, create_time, updater, update_time
     </sql>
     <select id="findByProjectName" resultMap="ProjectMap">
-        SELECT * FROM project WHERE project_name = #{projectName}
+        SELECT
+        <include refid="Base_Column_List"></include>
+        FROM project WHERE project_name = #{projectName}
     </select>
 
     <insert id="insert" parameterType="com.example.demo.entity.Project">
@@ -55,7 +57,7 @@
                      #{aprilRate}, #{mayRate}, #{juneRate},
                      #{julyRate}, #{augustRate}, #{septemberRate},
                      #{octoberRate}, #{novemberRate}, #{decemberRate},
-                     #{creator}, #{createTime}
+                     #{creator}, NOW()
                  )
     </insert>
     <update id="update" parameterType="com.example.demo.entity.Project">
@@ -86,14 +88,14 @@
         SELECT <include refid="Base_Column_List"></include>
         FROM project
         WHERE 1=1
-        <if test="annual != null">
-            AND annual = #{annual}
+        <if test="projectDTO.annual != null">
+            AND annual = #{projectDTO.annual}
         </if>
-        <if test="projectType != null and projectType != ''">
-            AND project_type = #{projectType}
+        <if test="projectDTO.projectType != null and projectDTO.projectType != ''">
+            AND project_type = #{projectDTO.projectType}
         </if>
-        <if test="projectName != null and projectName != ''">
-            AND project_name LIKE CONCAT('%', #{projectName}, '%')
+        <if test="projectDTO.projectName != null and projectDTO.projectName != ''">
+            AND project_name LIKE CONCAT('%', #{projectDTO.projectName}, '%')
         </if>
     </select>
 
@@ -104,7 +106,7 @@
         total_completion_rate, january_rate, february_rate, march_rate,
         april_rate, may_rate, june_rate, july_rate, august_rate,
         september_rate, october_rate, november_rate, december_rate,
-        creator, create_time
+        creator, create_time, updater, update_time
         ) VALUES
         <foreach collection="projects" item="project" separator=",">
             (
@@ -115,11 +117,38 @@
             #{project.mayRate}, #{project.juneRate}, #{project.julyRate},
             #{project.augustRate}, #{project.septemberRate}, #{project.octoberRate},
             #{project.novemberRate}, #{project.decemberRate},
-            #{project.creator}, #{project.createTime}
+            <if test="project.creator != null and project.creator != ''">
+                #{project.creator}
+            </if>
+            <if test="project.creator == null or project.creator == ''">
+                'SYS'
+            </if>
+            , NOW(),
+            <if test="project.updater != null and project.updater != ''">
+                #{project.updater}
+            </if>
+            <if test="project.updater == null or project.updater == ''">
+                'SYS'
+            </if>
+            , NOW()
             )
         </foreach>
     </insert>
-
+<!--    批量删除-->
+    <delete id="deleteByConditions" parameterType="com.example.demo.dto.ProjectDTO">
+        DELETE FROM project
+        <where>
+            <if test="projectDTO.annual != null">
+                AND annual = #{projectDTO.annual}
+            </if>
+            <if test="projectDTO.projectType != null and projectDTO.projectType != ''">
+                AND project_type = #{projectDTO.projectType}
+            </if>
+            <if test="projectDTO.projectName != null and projectDTO.projectName != ''">
+                AND project_name = #{projectDTO.projectName}
+            </if>
+        </where>
+    </delete>
     <!-- 批量更新 -->
     <update id="batchUpdate" parameterType="java.util.List">
         <foreach collection="projects" item="project" separator=";">
